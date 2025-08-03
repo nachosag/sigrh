@@ -1,0 +1,8 @@
+*.pyc
+__pycache__*
+sigrh.db
+.env
+.venv
+.postgres-password
+.vscode
+pyrightconfig.json

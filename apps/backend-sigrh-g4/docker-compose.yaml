@@ -1,0 +1,71 @@
+services:
+  backend:
+    build: .
+    ports:
+      - '8000:8000'
+    volumes:
+      - './.env:/home/sigrh/.env:ro'
+  db:
+    image: docker.io/library/postgres:17-alpine
+    ports:
+      - '8003:5432'
+    environment:
+      POSTGRES_USER: 'postgres'
+      #POSTGRES_PASSWORD_FILE: '/run/secrets/postgres-password'
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: 'sigrh'
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      #- './.postgres-password:/run/secrets/postgres-password:ro'
+      - 'postgres-data:/var/lib/postgresql/data'
+  mailpit:
+    image: docker.io/axllent/mailpit:latest
+    ports:
+      - '8005:8025'
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    volumes:
+      - type: volume
+        source: mailpit-data
+        target: /data
+        volume:
+          nocopy: false
+  ollama:
+    image: docker.io/ollama/ollama
+    volumes:
+      - type: volume
+        source: ollama-data
+        target: /root/.ollama
+        volume:
+          nocopy: false
+    entrypoint: /bin/bash
+    command: -c 'sleep 5 && /bin/ollama run ${OLLAMA_MODEL} & exec /bin/ollama serve'
+  dev:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    ports:
+      - '8001:22'
+      - '8002:8000'
+    volumes:
+      - type: volume
+        source: dev-data
+        target: /etc/ssh
+        volume:
+          nocopy: false
+      - '.:/root/sigrh'
+      - './.git:/root/sigrh/.git:ro'
+      - './docker-compose.yaml:/root/sigrh/docker-compose.yaml:ro'
+      - './dev.Dockerfile:/root/sigrh/dev.Dockerfile:ro'
+      - './Dockerfile:/root/sigrh/Dockerfile:ro'
+      - '~/.ssh/dev_id_ed25519.pub:/root/.ssh/authorized_keys:ro'
+      - './.zed/server-settings.json:/root/.config/zed/settings.json'
+
+volumes:
+  dev-data:
+  postgres-data:
+  mailpit-data:
+  ollama-data:
+

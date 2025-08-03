@@ -1,0 +1,29 @@
+services:
+  frontend:
+    build: .
+    ports:
+      - '3000:3000'
+  dev:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    ports:
+      - '3001:22'
+      - '3002:3000'
+    volumes:
+      - type: volume
+        source: dev-data
+        target: /etc/ssh
+        volume:
+          nocopy: false
+      - '.:/root/sigrh'
+      - './.git:/root/sigrh/.git:ro'
+      - './docker-compose.yaml:/root/sigrh/docker-compose.yaml:ro'
+      - './dev.Dockerfile:/root/sigrh/dev.Dockerfile:ro'
+      - './Dockerfile:/root/sigrh/Dockerfile'
+      - '~/.ssh/dev_id_ed25519.pub:/root/.ssh/authorized_keys:ro'
+      - './.zed/server-settings.json:/root/.config/zed/settings.json'
+
+volumes:
+  dev-data:
+
